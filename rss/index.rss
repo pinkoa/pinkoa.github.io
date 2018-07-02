@@ -1,0 +1,80 @@
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0"><channel><title>PINKOA TECH</title><description>Linux, Openstack</description><link>http://localhost:2368/</link><image><url>http://localhost:2368/favicon.png</url><title>PINKOA TECH</title><link>http://localhost:2368/</link></image><generator>Ghost 1.24</generator><lastBuildDate>Mon, 02 Jul 2018 22:54:36 GMT</lastBuildDate><atom:link href="http://localhost:2368/rss/" rel="self" type="application/rss+xml"/><ttl>60</ttl><item><title>Working Progress</title><description>&lt;div class="kg-card-markdown"&gt;&lt;p&gt;this is a working progress&lt;/p&gt;
+&lt;/div&gt;</description><link>http://localhost:2368/working-progress/</link><guid isPermaLink="false">5b3aab740c45485e59532405</guid><dc:creator>Charlie Martinez</dc:creator><pubDate>Mon, 02 Jul 2018 22:47:23 GMT</pubDate><content:encoded>&lt;div class="kg-card-markdown"&gt;&lt;p&gt;this is a working progress&lt;/p&gt;
+&lt;/div&gt;</content:encoded></item><item><title>How to Install Red Hat OpenStack 12/13 Undercloud in Enterprise Proxy Environments</title><description>&lt;div class="kg-card-markdown"&gt;&lt;p&gt;Hi Network, just a couple of weeks ago I had to Install an undercloud under an envionment complety proxied, I wanted to share this experience with you, I hope you find it useful.&lt;/p&gt;
+&lt;p&gt;In this enviroment we will be creating a local registry for the docker images that later will&lt;/p&gt;&lt;/div&gt;</description><link>http://localhost:2368/how-to-install-openstack-12-13-undercloud-in-enterprise-proxy-environments/</link><guid isPermaLink="false">5b3a88ff0c45485e59532403</guid><dc:creator>Charlie Martinez</dc:creator><pubDate>Mon, 02 Jul 2018 21:04:02 GMT</pubDate><media:content url="http://localhost:2368/content/images/2018/07/squidhero.jpg" medium="image"/><content:encoded>&lt;div class="kg-card-markdown"&gt;&lt;img src="http://localhost:2368/content/images/2018/07/squidhero.jpg" alt="How to Install Red Hat OpenStack 12/13 Undercloud in Enterprise Proxy Environments"&gt;&lt;p&gt;Hi Network, just a couple of weeks ago I had to Install an undercloud under an envionment complety proxied, I wanted to share this experience with you, I hope you find it useful.&lt;/p&gt;
+&lt;p&gt;In this enviroment we will be creating a local registry for the docker images that later will be used by our overcloud deployment command.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Configure Proxy in the /etc/yum.conf file and /etc/rhsm.conf&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;vim /etc/rhsm.rhsm.conf
+# an http proxy server to use
+proxy_hostname = YOUR-PROXY-IP-OR-FQDN
+ 
+# port for http proxy server
+proxy_port = 3128
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;vim /etc/yum.conf
+proxy=http://YOUR-PROXY-IP-OR-FQDN:3128
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ol start="2"&gt;
+&lt;li&gt;Configure Proxy to the Docker service&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;vim /etc/systemd/system/docker.service.d/http-proxy.conf
+ 
+[Service]
+Environment=&amp;quot;HTTP_PROXY=http://YOUR-PROXY-IP-OR-FQDN/:3128/&amp;quot; &amp;quot;HTTPS_PROXY=http://YOUR-PROXY-IP-OR-FQDN:3128/&amp;quot; &amp;quot;NO_PROXY=127.0.0.1,UNDERCLOUD-IP,169.254.169.254,/var/run/docker.sock&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;sudo systemctl daemon-reload &amp;amp;&amp;amp; sudo systemctl restart docker
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;NOTE: &lt;em&gt;Please use specific IP for the no proxy session rather than  CIDR for example 192.168.1.0/24, docker will not complain about this systax, but it won't no proxy the whole CIDR.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;After this Your environment has been propelry configured to use proxy and the undercloud install can go without problems.&lt;/p&gt;
+&lt;ol start="3"&gt;
+&lt;li&gt;As well once you upload the docker images to the local regitry those will work properly, you can verify this the following command.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code&gt;[root@pundercloud docker]# curl http://UNDERCLOUD-IP:8787/v2/_catalog|jq .
+  % Total	% Received % Xferd  Average Speed   Time	Time 	Time  Current
+                                 Dload  Upload   Total   Spent	Left  Speed
+100  1197  100  1197	0 	0  61193  	0 --:--:-- --:--:-- --:--:-- 63000
+{
+  &amp;quot;repositories&amp;quot;: [
+    &amp;quot;rhceph/rhceph-2-rhel7&amp;quot;,
+    &amp;quot;rhosp12/openstack-aodh-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-aodh-evaluator&amp;quot;,
+    &amp;quot;rhosp12/openstack-aodh-listener&amp;quot;,
+    &amp;quot;rhosp12/openstack-aodh-notifier&amp;quot;,
+    &amp;quot;rhosp12/openstack-ceilometer-central&amp;quot;,
+    &amp;quot;rhosp12/openstack-ceilometer-compute&amp;quot;,
+    &amp;quot;rhosp12/openstack-ceilometer-notification&amp;quot;,
+    &amp;quot;rhosp12/openstack-cron&amp;quot;,
+    &amp;quot;rhosp12/openstack-glance-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-gnocchi-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-gnocchi-metricd&amp;quot;,
+    &amp;quot;rhosp12/openstack-gnocchi-statsd&amp;quot;,
+    &amp;quot;rhosp12/openstack-haproxy&amp;quot;,
+    &amp;quot;rhosp12/openstack-heat-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-heat-api-cfn&amp;quot;,
+    &amp;quot;rhosp12/openstack-heat-engine&amp;quot;,
+    &amp;quot;rhosp12/openstack-horizon&amp;quot;,
+    &amp;quot;rhosp12/openstack-keystone&amp;quot;,
+    &amp;quot;rhosp12/openstack-mariadb&amp;quot;,
+    &amp;quot;rhosp12/openstack-memcached&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-compute&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-conductor&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-consoleauth&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-libvirt&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-novncproxy&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-placement-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-nova-scheduler&amp;quot;,
+    &amp;quot;rhosp12/openstack-panko-api&amp;quot;,
+    &amp;quot;rhosp12/openstack-rabbitmq&amp;quot;,
+    &amp;quot;rhosp12/openstack-redis&amp;quot;,
+    &amp;quot;rhosp12/openstack-swift-account&amp;quot;,
+    &amp;quot;rhosp12/openstack-swift-container&amp;quot;,
+    &amp;quot;rhosp12/openstack-swift-object&amp;quot;,
+    &amp;quot;rhosp12/openstack-swift-proxy-server&amp;quot;
+  ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content:encoded></item></channel></rss>
